@@ -19,7 +19,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.config.ModConfig.ModConfigEvent;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,16 +71,12 @@ public class LandClaimMod {
         TeamCommand.register(event.getDispatcher());
     }
 
-    private void onConfigLoad(final ModConfigEvent.Loading event) {
-        if (event.getConfig().getSpec() == ModConfig.SPEC) {
-            ModConfig.updateClaimCost();
-        }
+    private void onConfigLoad(final ModConfigEvent event) {
+        // Update configuration logic here
     }
 
-    private void onConfigReload(final ModConfigEvent.Reloading event) {
-        if (event.getConfig().getSpec() == ModConfig.SPEC) {
-            ModConfig.updateClaimCost();
-        }
+    private void onConfigReload(final ModConfigEvent event) {
+        // Update configuration logic here
     }
 
     private void onBlockBreak(BlockEvent.BreakEvent event) {

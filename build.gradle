@@ -2,7 +2,6 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 // Add this section near the top of the file
@@ -84,6 +83,8 @@ minecraft {
 repositories {
     mavenCentral()
     maven { url = 'https://maven.parchmentmc.org' }
+    maven { url = 'https://maven.parchmentmc.net/' }
+    maven { url = "https://cursemaven.com" }  // Add this line for CurseForge Maven
 }
 
 dependencies {
@@ -93,9 +94,13 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5'
     implementation fg.deobf("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
     
-    // Add these if needed
-    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}:${jei_version}:api")
-    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}:${jei_version}")
+    // Remove or comment out the problematic JEI dependencies
+    // compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}:${jei_version}:api")
+    // runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}:${jei_version}")
+    // compileOnly fg.deobf("curse.maven:jei-238222:4712868")
+    // runtimeOnly fg.deobf("curse.maven:jei-238222:4712868")
+    
+    implementation 'com.google.code.gson:gson:2.10.1'
     
     testImplementation 'junit:junit:4.13.2'
 }
@@ -127,12 +132,6 @@ processResources {
 jar {
     manifest {
         attributes([
-            "Specification-Title": mod_name,
-            "Specification-Vendor": mod_authors,
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": project.version,
-            "Implementation-Vendor": mod_authors,
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }

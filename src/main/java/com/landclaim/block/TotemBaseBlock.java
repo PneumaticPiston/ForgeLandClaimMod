@@ -7,11 +7,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class TotemBaseBlock extends Block implements EntityBlock {
     public TotemBaseBlock() {
-        super(Properties.of(Material.STONE)
+        super(Properties.of(BlockBehaviour.Properties.STONE)
             .strength(3.0f, 6.0f)
             .requiresCorrectToolForDrops()
         );
