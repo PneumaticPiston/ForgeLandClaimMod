@@ -1,0 +1,16 @@
+{
+  "commands.team.create.failed.exists": "A team with that name already exists",
+  "commands.team.create.success": "Created team %s",
+  "commands.team.join.failed.not_found": "No team found with that name",
+  "commands.team.join.failed.already_in_team": "You are already in a team",
+  "commands.team.join.failed.not_invited": "You have not been invited to this team",
+  "commands.team.join.success": "Joined team %s",
+  "commands.team.leave.failed.not_in_team": "You are not in a team",
+  "commands.team.leave.success": "Left team %s",
+  "commands.team.promote.failed.not_owner": "Only the team owner can promote players",
+  "commands.team.promote.failed.not_in_team": "That player is not in your team",
+  "commands.team.promote.success": "Promoted %s to team owner",
+  "commands.team.promote.received": "You have been promoted to owner of team %s",
+  "commands.team.invite.success": "Invited %s to your team",
+  "commands.team.invite.received": "You have been invited to join team %s"
+}

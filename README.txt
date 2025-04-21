@@ -1,4 +1,3 @@
-
 Source installation information for modders
 -------------------------------------------
 This code follows the Minecraft Forge installation methodology. It will apply
@@ -30,6 +29,31 @@ If at any point you are missing libraries in your IDE, or you've run into proble
 run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
 {this does not affect your code} and then start the process again.
 
+Building and Exporting the Mod:
+==============================
+
+To build the mod into a usable JAR file:
+
+1. Make sure all required assets from TODO.md are in place
+2. Open a command prompt in the project directory
+3. Run `gradlew build` (or `./gradlew build` on Mac/Linux)
+4. The compiled mod JAR will be created in build/libs/
+   - Use the file WITHOUT "-sources" in its name
+   - Example: landclaim-1.0.0.jar
+
+To install the mod:
+1. Locate your Minecraft mods folder:
+   - Windows: %APPDATA%/.minecraft/mods
+   - Mac: ~/Library/Application Support/minecraft/mods
+   - Linux: ~/.minecraft/mods
+2. Copy the JAR file into the mods folder
+3. Launch Minecraft with Forge installed
+
+Development Workflow:
+1. Make your code changes
+2. Run `gradlew runClient` to test in the development environment
+3. When ready to release, run `gradlew build`
+
 Mapping Names:
 =============================
 By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
@@ -43,4 +67,4 @@ Additional Resources:
 Community Documentation: https://mcforge.readthedocs.io/en/latest/gettingstarted/  
 LexManos' Install Video: https://www.youtube.com/watch?v=8VEdtQLuLO0  
 Forge Forum: https://forums.minecraftforge.net/  
-Forge Discord: https://discord.gg/UvedJ9m  
+Forge Discord: https://discord.gg/UvedJ9m

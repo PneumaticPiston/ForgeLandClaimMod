@@ -5,6 +5,7 @@ bin
 .metadata
 .classpath
 .project
+/error-logs/
 
 # idea
 out

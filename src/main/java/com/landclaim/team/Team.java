@@ -11,16 +11,23 @@ public class Team {
     private UUID owner;
     private int powerPoints;
     private final Map<UUID, TeamRole> memberRoles;
+    private int claimedChunks;
+    private final Set<UUID> invitedPlayers = new HashSet<>();
 
-    public Team(String name, ServerPlayer owner) {
+    public Team(String name, UUID ownerId) {
         this.name = name;
         this.id = UUID.randomUUID();
         this.members = new HashSet<>();
-        this.owner = owner.getUUID();
-        this.members.add(owner.getUUID());
+        this.owner = ownerId;
+        this.members.add(ownerId);
         this.powerPoints = 0;
         this.memberRoles = new HashMap<>();
-        this.memberRoles.put(owner.getUUID(), TeamRole.OWNER);
+        this.memberRoles.put(ownerId, TeamRole.OWNER);
+        this.claimedChunks = 0;
+    }
+
+    public Team(String name, ServerPlayer owner) {
+        this(name, owner.getUUID());
     }
 
     public String getName() {
@@ -48,8 +55,12 @@ public class Team {
     }
 
     public void addMember(ServerPlayer player) {
-        members.add(player.getUUID());
-        memberRoles.put(player.getUUID(), TeamRole.MEMBER);
+        addMember(player.getUUID());
+    }
+
+    public void addMember(UUID playerId) {
+        members.add(playerId);
+        memberRoles.put(playerId, TeamRole.MEMBER);
     }
 
     public void removeMember(UUID playerId) {
@@ -73,6 +84,36 @@ public class Team {
         return false;
     }
 
+    public int getClaimedChunks() {
+        return claimedChunks;
+    }
+
+    public void incrementClaimedChunks() {
+        claimedChunks++;
+    }
+
+    public void decrementClaimedChunks() {
+        if (claimedChunks > 0) {
+            claimedChunks--;
+        }
+    }
+
+    public void invitePlayer(UUID playerId) {
+        invitedPlayers.add(playerId);
+    }
+
+    public boolean isInvited(UUID playerId) {
+        return invitedPlayers.contains(playerId);
+    }
+
+    public void setOwner(UUID playerId) {
+        if (members.contains(playerId)) {
+            memberRoles.put(this.owner, TeamRole.MEMBER);
+            this.owner = playerId;
+            memberRoles.put(playerId, TeamRole.OWNER);
+        }
+    }
+
     // Save team data to NBT
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
@@ -80,6 +121,7 @@ public class Team {
         tag.putUUID("id", id);
         tag.putUUID("owner", owner);
         tag.putInt("powerPoints", powerPoints);
+        tag.putInt("claimedChunks", claimedChunks);
         
         CompoundTag membersTag = new CompoundTag();
         members.forEach(uuid -> membersTag.putBoolean(uuid.toString(), true));
@@ -98,6 +140,7 @@ public class Team {
         team.id = tag.getUUID("id");
         team.owner = tag.getUUID("owner");
         team.powerPoints = tag.getInt("powerPoints");
+        team.claimedChunks = tag.getInt("claimedChunks");
 
         CompoundTag membersTag = tag.getCompound("members");
         membersTag.getAllKeys().forEach(key -> team.members.add(UUID.fromString(key)));
