@@ -8,7 +8,6 @@ plugins {
 gradle.projectsEvaluated {
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-        options.encoding = "UTF-8"
     }
 }
 
@@ -101,6 +100,39 @@ dependencies {
     // runtimeOnly fg.deobf("curse.maven:jei-238222:4712868")
     
     implementation 'com.google.code.gson:gson:2.10.1'
+    annotationProcessor 'com.google.code.gson:gson:2.10.1'
+    
+    // Ensure Mixin annotation processor has access to Gson
+    annotationProcessor('org.spongepowered:mixin:0.8.5') {
+        dependencies {
+            implementation 'com.google.code.gson:gson:2.10.1'
+        }
+    }
+    
+    // Add Guava dependency
+    implementation 'com.google.guava:guava:32.1.2-jre'
+    annotationProcessor 'com.google.guava:guava:32.1.2-jre'
+    
+    // Ensure Mixin annotation processor has access to Guava
+    annotationProcessor('org.spongepowered:mixin:0.8.5') {
+        dependencies {
+            implementation 'com.google.guava:guava:32.1.2-jre'
+        }
+    }
+    
+    // Add ASM dependency
+    implementation 'org.ow2.asm:asm:9.5'
+    implementation 'org.ow2.asm:asm-tree:9.5'
+    annotationProcessor 'org.ow2.asm:asm:9.5'
+    annotationProcessor 'org.ow2.asm:asm-tree:9.5'
+    
+    // Ensure Mixin annotation processor has access to ASM
+    annotationProcessor('org.spongepowered:mixin:0.8.5') {
+        dependencies {
+            implementation 'org.ow2.asm:asm:9.5'
+            implementation 'org.ow2.asm:asm-tree:9.5'
+        }
+    }
     
     testImplementation 'junit:junit:4.13.2'
 }
@@ -140,4 +172,20 @@ jar {
     from('LICENSE.txt') {
         rename { "${it}_${mod_name}"}
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.incremental = true
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+tasks.named('compileJava') {
+    options.incremental = true
+    outputs.upToDateWhen { false }
+}
+
+tasks.named('compileJava').configure {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
