@@ -1,7 +1,6 @@
 package com.landclaim.item;
 
 import com.landclaim.claim.TerritoryChunk;
-import com.landclaim.claim.TerritoryType;
 import com.landclaim.data.DataManager;
 import com.landclaim.guild.Guild;
 
@@ -16,10 +15,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 
 import org.joml.Vector3f;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -37,10 +36,10 @@ public class ChunkViewerItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public @Nonnull InteractionResultHolder<ItemStack> use(@Nonnull Level level, @Nonnull Player player, @Nonnull InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
         
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+        if (!level.isClientSide && player instanceof ServerPlayer) {
             ChunkPos playerChunk = new ChunkPos(player.blockPosition());
             ServerLevel serverLevel = (ServerLevel) level;
             
@@ -145,7 +144,7 @@ public class ChunkViewerItem extends Item {
     }
 
     @Override
-    public boolean isFoil(ItemStack stack) {
+    public boolean isFoil(@Nonnull ItemStack stack) {
         return true; // Always show enchantment glint
     }
 }

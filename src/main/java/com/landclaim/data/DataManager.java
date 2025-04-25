@@ -10,6 +10,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -217,7 +218,7 @@ public class DataManager extends SavedData {
     
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(@Nonnull CompoundTag tag) {
         ListTag guildsTag = new ListTag();
         guilds.values().forEach(guild -> {
             CompoundTag guildTag = guild.save();

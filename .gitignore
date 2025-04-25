@@ -6,7 +6,7 @@ bin
 .classpath
 .project
 /error-logs/
-/src/errors.txt
+src\error.txt
 
 # idea
 out

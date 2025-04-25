@@ -1,5 +1,7 @@
 package com.landclaim;
 
+import com.landclaim.claim.TerritoryChunk;
+import com.landclaim.claim.TerritoryType;
 import com.landclaim.data.DataManager;
 import com.landclaim.registry.ModRegistry;
 import com.landclaim.guild.Guild;
@@ -8,6 +10,7 @@ import com.landclaim.command.GuildCommand;
 import com.landclaim.config.ModConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
@@ -36,6 +39,7 @@ public class LandClaimMod {
         ModRegistry.BLOCKS.register(modEventBus);
         ModRegistry.ITEMS.register(modEventBus);
         ModRegistry.BLOCK_ENTITIES.register(modEventBus);
+        ModRegistry.CREATIVE_MODE_TABS.register(modEventBus);
         
         // Register config
         ModConfig.register();
@@ -83,11 +87,22 @@ public class LandClaimMod {
         if (!(event.getPlayer() instanceof ServerPlayer player)) return;
         
         ChunkPos chunkPos = new ChunkPos(event.getPos());
-        Guild guild = DataManager.getGuildForChunk(chunkPos);
+        DataManager manager = DataManager.get((ServerLevel) player.level());
+        TerritoryChunk territory = manager.getTerritoryAt(chunkPos, player.level().dimension());
         
-        if (guild != null && !guild.isMember(player.getUUID())) {
+        if (territory == null) return;
+        
+        Guild guild = manager.getGuild(territory.getOwnerId());
+        
+        // Allow members of the guild that owns the chunk to break blocks
+        if (guild != null && guild.isMember(player.getUUID())) {
+            return;
+        }
+        
+        // Only prevent breaking in Settlement territories for non-guild members
+        if (territory.getType() == TerritoryType.SETTLEMENT) {
             event.setCanceled(true);
-            player.sendSystemMessage(Component.literal("§cYou cannot break blocks in this claimed territory!"));
+            player.sendSystemMessage(Component.literal("§cYou cannot break blocks in this settlement!"));
         }
     }
 
@@ -95,11 +110,22 @@ public class LandClaimMod {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         
         ChunkPos chunkPos = new ChunkPos(event.getPos());
-        Guild guild = DataManager.getGuildForChunk(chunkPos);
+        DataManager manager = DataManager.get((ServerLevel) player.level());
+        TerritoryChunk territory = manager.getTerritoryAt(chunkPos, player.level().dimension());
         
-        if (guild != null && !guild.isMember(player.getUUID())) {
+        if (territory == null) return;
+        
+        Guild guild = manager.getGuild(territory.getOwnerId());
+        
+        // Allow members of the guild that owns the chunk to place blocks
+        if (guild != null && guild.isMember(player.getUUID())) {
+            return;
+        }
+        
+        // Only prevent placing in Settlement territories for non-guild members
+        if (territory.getType() == TerritoryType.SETTLEMENT) {
             event.setCanceled(true);
-            player.sendSystemMessage(Component.literal("§cYou cannot place blocks in this claimed territory!"));
+            player.sendSystemMessage(Component.literal("§cYou cannot place blocks in this settlement!"));
         }
     }
 
@@ -108,11 +134,22 @@ public class LandClaimMod {
         
         BlockPos pos = event.getPos();
         ChunkPos chunkPos = new ChunkPos(pos);
-        Guild guild = DataManager.getGuildForChunk(chunkPos);
+        DataManager manager = DataManager.get((ServerLevel) player.level());
+        TerritoryChunk territory = manager.getTerritoryAt(chunkPos, player.level().dimension());
         
-        if (guild != null && !guild.isMember(player.getUUID())) {
+        if (territory == null) return;
+        
+        Guild guild = manager.getGuild(territory.getOwnerId());
+        
+        // Allow members of the guild that owns the chunk to interact with blocks
+        if (guild != null && guild.isMember(player.getUUID())) {
+            return;
+        }
+        
+        // Only prevent interactions in Settlement territories for non-guild members
+        if (territory.getType() == TerritoryType.SETTLEMENT) {
             event.setCanceled(true);
-            player.sendSystemMessage(Component.literal("§cYou cannot interact with blocks in this claimed territory!"));
+            player.sendSystemMessage(Component.literal("§cYou cannot interact with blocks in this settlement!"));
         }
     }
 }

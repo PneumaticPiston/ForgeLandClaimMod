@@ -1,5 +1,6 @@
 package com.landclaim.command;
 
+import com.landclaim.block.entity.GuildDisplayBlockEntity;
 import com.landclaim.data.DataManager;
 import com.landclaim.guild.Guild;
 import com.mojang.brigadier.Command;
@@ -10,9 +11,11 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class GuildCommand {
     private static final SimpleCommandExceptionType ERROR_GUILD_EXISTS = 
@@ -41,7 +44,14 @@ public class GuildCommand {
                 .executes(ctx -> leaveGuild(ctx.getSource())))
             .then(Commands.literal("promote")
                 .then(Commands.argument("player", EntityArgument.player())
-                    .executes(ctx -> promotePlayer(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"))))));
+                    .executes(ctx -> promotePlayer(ctx.getSource(), EntityArgument.getPlayer(ctx, "player")))))
+            .then(Commands.literal("forceDisplay")
+                .requires(source -> source.hasPermission(2)) // Only for operators
+                .then(Commands.argument("name", StringArgumentType.word())
+                    .executes(ctx -> createForcedDisplay(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
+            .then(Commands.literal("resetDisplay")
+                .requires(source -> source.hasPermission(2)) // Only for operators
+                .executes(ctx -> resetForcedDisplay(ctx.getSource()))));
     }
 
     private static int createGuild(CommandSourceStack source, String guildName) throws CommandSyntaxException {
@@ -140,6 +150,55 @@ public class GuildCommand {
         guild.setOwner(target.getUUID());
         source.sendSuccess(() -> Component.translatable("commands.guild.promote.success", target.getDisplayName()), true);
         target.sendSystemMessage(Component.translatable("commands.guild.promote.received", guild.getName()));
+        return Command.SINGLE_SUCCESS;
+    }
+    
+    private static int createForcedDisplay(CommandSourceStack source, String guildName) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ServerLevel level = player.serverLevel();
+        DataManager manager = DataManager.get(level);
+        Guild guild = manager.getGuild(guildName);
+        
+        if (guild == null) {
+            source.sendFailure(Component.literal("Guild not found: " + guildName));
+            return 0;
+        }
+        
+        // Get the block at the player's feet
+        BlockPos pos = player.blockPosition().below();
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        
+        if (!(blockEntity instanceof GuildDisplayBlockEntity displayEntity)) {
+            source.sendFailure(Component.literal("You must be standing on a Guild Display Block"));
+            return 0;
+        }
+        
+        // Force the display to show the selected guild
+        displayEntity.setForcedGuild(guild.getId());
+        
+        source.sendSuccess(() -> 
+            Component.literal("This Guild Display Block will now show information for guild: " + guild.getName()), true);
+        return Command.SINGLE_SUCCESS;
+    }
+    
+    private static int resetForcedDisplay(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ServerLevel level = player.serverLevel();
+        
+        // Get the block at the player's feet
+        BlockPos pos = player.blockPosition().below();
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        
+        if (!(blockEntity instanceof GuildDisplayBlockEntity displayEntity)) {
+            source.sendFailure(Component.literal("You must be standing on a Guild Display Block"));
+            return 0;
+        }
+        
+        // Reset the forced display
+        displayEntity.clearForcedGuild();
+        
+        source.sendSuccess(() -> 
+            Component.literal("This Guild Display Block will now show information based on territory"), true);
         return Command.SINGLE_SUCCESS;
     }
 }

@@ -8,11 +8,13 @@ import com.landclaim.registry.ModRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import javax.annotation.Nonnull;
 import java.util.UUID;
 
 public class GuildDisplayBlockEntity extends BlockEntity {
@@ -37,7 +39,7 @@ public class GuildDisplayBlockEntity extends BlockEntity {
     }
     
     private void updateDisplay() {
-        if (level == null) return;
+        if (level == null || !(level instanceof ServerLevel)) return;
         
         // If this is a forced display, use the set guild ID
         if (forceDisplay && displayedGuildId != null) {
@@ -47,7 +49,12 @@ public class GuildDisplayBlockEntity extends BlockEntity {
         
         // Otherwise, determine the guild based on territory
         ChunkPos chunkPos = new ChunkPos(worldPosition);
-        TerritoryChunk territory = DataManager.INSTANCE.getTerritoryAt(chunkPos, level.dimension());
+        
+        // Get the DataManager instance properly
+        DataManager dataManager = DataManager.get((ServerLevel)level);
+        if (dataManager == null) return;
+        
+        TerritoryChunk territory = dataManager.getTerritoryAt(chunkPos, level.dimension());
         
         if (territory != null && territory.getType() != TerritoryType.WILDERNESS) {
             UUID guildId = territory.getOwnerId();
@@ -62,7 +69,13 @@ public class GuildDisplayBlockEntity extends BlockEntity {
     }
     
     private void updateDisplayForGuild(UUID guildId) {
-        Guild guild = DataManager.INSTANCE.getGuild(guildId);
+        if (!(level instanceof ServerLevel)) return;
+        
+        // Get the DataManager instance properly
+        DataManager dataManager = DataManager.get((ServerLevel)level);
+        if (dataManager == null) return;
+        
+        Guild guild = dataManager.getGuild(guildId);
         if (guild == null) {
             clearDisplay();
             return;
@@ -104,7 +117,7 @@ public class GuildDisplayBlockEntity extends BlockEntity {
     }
     
     @Override
-    public void load(CompoundTag tag) {
+    public void load(@Nonnull CompoundTag tag) {
         super.load(tag);
         
         if (tag.contains("DisplayedGuildId")) {
@@ -119,7 +132,7 @@ public class GuildDisplayBlockEntity extends BlockEntity {
     }
     
     @Override
-    protected void saveAdditional(CompoundTag tag) {
+    protected void saveAdditional(@Nonnull CompoundTag tag) {
         super.saveAdditional(tag);
         
         if (displayedGuildId != null) {
@@ -131,5 +144,13 @@ public class GuildDisplayBlockEntity extends BlockEntity {
         if (customName != null) {
             tag.putString("CustomName", Component.Serializer.toJson(customName));
         }
+    }
+    
+    @Override
+    public @Nonnull Level getLevel() {
+        if (level == null) {
+            throw new IllegalStateException("Level is null but was accessed");
+        }
+        return level;
     }
 }

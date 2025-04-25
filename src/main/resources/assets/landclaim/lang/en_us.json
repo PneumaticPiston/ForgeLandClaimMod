@@ -14,7 +14,16 @@
   "commands.guild.invite.success": "Invited %s to your guild",
   "commands.guild.invite.received": "You have been invited to join guild %s",
   
+  "itemGroup.landclaim": "Land Claim",
+  
   "block.landclaim.totem_base": "Totem Base Block",
+  "block.landclaim.enhancer_block": "Effect Enhancer Block",
+  "block.landclaim.inhibitor_block": "Effect Inhibitor Block",
+  "block.landclaim.inventory_keeper_block": "Inventory Keeper Block",
+  "block.landclaim.guild_display_block": "Guild Display Block",
+  "block.landclaim.height_extender_diamond": "Diamond Height Extender",
+  "block.landclaim.height_extender_iron": "Iron Height Extender",
+  
   "item.landclaim.chunk_viewer": "Claim Boundary Viewer",
   "item.landclaim.guild_stats": "Guild Statistics Tablet",
   

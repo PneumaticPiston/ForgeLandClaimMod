@@ -3,6 +3,7 @@ package com.landclaim.mixin;
 import com.landclaim.claim.TerritoryChunk;
 import com.landclaim.data.DataManager;
 import com.landclaim.block.entity.TotemBaseBlockEntity;
+import com.landclaim.guild.Guild;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,8 +20,11 @@ import java.util.UUID;
 
 @Mixin(ServerPlayer.class)
 public abstract class PlayerDeathMixin {
-
-    @Inject(method = "die(Lnet/minecraft/world/damagesource/DamageSource;)V", at = @At("HEAD"), cancellable = true)
+    @Inject(
+        method = "die(Lnet/minecraft/world/damagesource/DamageSource;)V",
+        at = @At("HEAD"),
+        cancellable = true
+    )
     private void onPlayerDeath(DamageSource source, CallbackInfo ci) {
         Player player = (Player)(Object)this;
         
@@ -28,11 +32,19 @@ public abstract class PlayerDeathMixin {
         
         ServerLevel level = (ServerLevel) player.level();
         ChunkPos chunkPos = new ChunkPos(player.blockPosition());
+        
+        if (DataManager.INSTANCE == null) return;
+        
         TerritoryChunk territory = DataManager.INSTANCE.getTerritoryAt(chunkPos, level.dimension());
         
         if (territory != null && territory.isConnectedToTotem()) {
             UUID guildId = territory.getOwnerId();
-            UUID playerGuild = DataManager.INSTANCE.getPlayerGuild(player.getUUID()).getId();
+            
+            // Get player's guild
+            Guild playerGuildObj = DataManager.INSTANCE.getPlayerGuild(player.getUUID());
+            if (playerGuildObj == null) return;
+            
+            UUID playerGuild = playerGuildObj.getId();
             
             // Check if player is in the same guild as the territory
             if (guildId != null && guildId.equals(playerGuild)) {

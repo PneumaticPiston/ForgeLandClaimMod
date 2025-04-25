@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class GuildDisplayBlock extends Block implements EntityBlock {
@@ -23,19 +24,20 @@ public class GuildDisplayBlock extends Block implements EntityBlock {
     }
 
     @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(@Nonnull BlockPos pos, @Nonnull BlockState state) {
         return new GuildDisplayBlockEntity(pos, state);
     }
     
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state, @Nonnull BlockEntityType<T> type) {
         return type == ModRegistry.GUILD_DISPLAY_ENTITY.get() ? 
             (world, pos, blockState, entity) -> ((GuildDisplayBlockEntity) entity).tick() : null;
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+    @SuppressWarnings("deprecated")
+    public void onRemove(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof GuildDisplayBlockEntity) {
@@ -46,7 +48,7 @@ public class GuildDisplayBlock extends Block implements EntityBlock {
     }
     
     @Override
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+    public void playerWillDestroy(@Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nonnull Player player) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity instanceof GuildDisplayBlockEntity) {
             ((GuildDisplayBlockEntity) blockEntity).onBreak();

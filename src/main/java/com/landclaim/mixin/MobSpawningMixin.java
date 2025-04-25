@@ -6,10 +6,7 @@ import com.landclaim.config.ModConfig;
 import com.landclaim.data.DataManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.NaturalSpawner;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,29 +17,52 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(NaturalSpawner.class)
 public class MobSpawningMixin {
 
-    @Inject(method = "isValidSpawnPosition(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/MobSpawnType;)Z", at = @At("HEAD"), cancellable = true)
-    private static void onCheckSpawn(ServerLevel level, MobCategory mobCategory, EntityType<?> entityType, 
-                                   BlockPos pos, MobSpawnType spawnType, CallbackInfoReturnable<Boolean> cir) {
-        if (level.isClientSide()) return;
+    // Targeting the correct method for validating mob spawn positions
+    @Inject(
+        method = "isValidSpawnPosition(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/MobSpawnType;)Z",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private static void onMobsCanSpawnAtLocation(
+            ServerLevel level, 
+            MobCategory category,
+            net.minecraft.world.entity.EntityType<?> entityType,
+            BlockPos pos, 
+            net.minecraft.world.entity.MobSpawnType spawnType,
+            CallbackInfoReturnable<Boolean> cir) {
         
-        // Only handle MONSTER category for now
-        if (mobCategory != MobCategory.MONSTER) return;
+        // Skip if the instance is null or we're on the client
+        if (DataManager.INSTANCE == null || level.isClientSide()) {
+            return;
+        }
         
+        // Get territory information
         ChunkPos chunkPos = new ChunkPos(pos);
         TerritoryChunk territory = DataManager.INSTANCE.getTerritoryAt(chunkPos, level.dimension());
         
-        if (territory != null) {
-            if (territory.getType() == TerritoryType.SETTLEMENT && ModConfig.SETTLEMENT_DISABLE_HOSTILE_SPAWNS.get()) {
-                // Check if the spawn position is on the surface
-                if (pos.getY() >= level.getSeaLevel()) {
-                    cir.setReturnValue(false);
-                }
-            } else if (territory.getType() == TerritoryType.CLAIMED) {
-                // Apply totem spawn modifiers for claimed territories
-                // This would require getting the totem for this territory and checking modifiers
-            } else if (territory.getType() == TerritoryType.DUNGEON && ModConfig.DUNGEON_ALLOW_ALL_SPAWNS.get()) {
-                // Dungeons should allow all spawns as normal
-                // We don't need to modify anything
+        // Allow all spawning in normal wilderness and claimed territories
+        if (territory == null || 
+            territory.getType() == TerritoryType.WILDERNESS || 
+            territory.getType() == TerritoryType.CLAIMED) {
+            return;
+        }
+        
+        // Check Settlement territories - prevent hostile mobs if configured
+        if (territory.getType() == TerritoryType.SETTLEMENT && 
+            ModConfig.SETTLEMENT_DISABLE_HOSTILE_SPAWNS.get()) {
+            
+            // Only block hostile mobs and only on the surface
+            if (category == MobCategory.MONSTER && pos.getY() >= level.getSeaLevel()) {
+                cir.setReturnValue(false);
+                return;
+            }
+        }
+        
+        // Dungeon territories have no spawning restrictions
+        if (territory.getType() == TerritoryType.DUNGEON) {
+            // If configured to always allow spawning, don't modify the result
+            if (ModConfig.DUNGEON_ALLOW_ALL_SPAWNS.get()) {
+                return;
             }
         }
     }

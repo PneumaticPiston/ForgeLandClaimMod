@@ -5,8 +5,8 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "landclaim.refmap.json",
   "mixins": [
-    "MobSpawningMixin",
-    "PlayerDeathMixin"
+    "PlayerDeathMixin",
+    "MobSpawningMixin"
   ],
   "client": [
   ],

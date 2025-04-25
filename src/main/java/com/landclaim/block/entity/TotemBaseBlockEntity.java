@@ -1,24 +1,22 @@
 package com.landclaim.block.entity;
 
-import com.landclaim.claim.TerritoryChunk;
 import com.landclaim.config.ModConfig;
+import com.landclaim.data.DataManager;
 import com.landclaim.guild.Guild;
 import com.landclaim.registry.ModRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CauldronBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +32,7 @@ public class TotemBaseBlockEntity extends BlockEntity {
     // Totem effect modifiers
     private boolean keepInventoryOnDeath = false;
     private float potionEffectModifier = 1.0f;
-    private float mobSpawnModifier = 1.0f;
+    private float mobSpawnModifier = 1.0f; // Will be used for modifying mob spawn rates
 
     public TotemBaseBlockEntity(BlockPos pos, BlockState state) {
         super(ModRegistry.TOTEM_BASE_ENTITY.get(), pos, state);
@@ -87,6 +85,14 @@ public class TotemBaseBlockEntity extends BlockEntity {
         }
     }
 
+    @Override
+    public @Nonnull Level getLevel() {
+        if (level == null) {
+            throw new IllegalStateException("Level is null but was accessed");
+        }
+        return level;
+    }
+
     public void tick() {
         if (level != null && !level.isClientSide) {
             scanTotemStructure();
@@ -108,8 +114,12 @@ public class TotemBaseBlockEntity extends BlockEntity {
         mobSpawnModifier = 1.0f;
         keepInventoryOnDeath = false;
         
+        // Set the base power points from the config
+        this.powerPointsGenerated = ModConfig.BASE_POWER_POINTS_PER_TOTEM.get();
+        
         int heightModifier = 0;
-        int blocksToCheck = maxTotemCheckHeight;
+        int blocksToCheck = ModConfig.DEFAULT_TOTEM_CHECK_HEIGHT.get();
+        this.maxTotemCheckHeight = blocksToCheck;
         
         // Track the last effect block to apply modifiers
         BlockState lastEffectBlock = null;
@@ -121,10 +131,10 @@ public class TotemBaseBlockEntity extends BlockEntity {
             BlockState state = level.getBlockState(posToCheck);
             
             // Check for height extenders (don't count toward the height limit)
-            if (state.is(Blocks.DIAMOND_BLOCK)) {
+            if (state.is(ModRegistry.HEIGHT_EXTENDER_DIAMOND.get())) {
                 heightModifier += 4;
                 continue;
-            } else if (state.is(Blocks.IRON_BLOCK)) {
+            } else if (state.is(ModRegistry.HEIGHT_EXTENDER_IRON.get())) {
                 heightModifier += 2;
                 continue;
             }
@@ -189,15 +199,23 @@ public class TotemBaseBlockEntity extends BlockEntity {
     }
 
     private void generatePowerPoints() {
-        if (!isConnectedToTerritory) return;
+        if (!isConnectedToTerritory || level == null) return;
         
         // Get base power points per totem from config
         int basePoints = ModConfig.BASE_POWER_POINTS_PER_TOTEM.get();
         
         powerPointsGenerated++;
         if (powerPointsGenerated >= 1200) { // 1 minute at 20 ticks/second
-            // TODO: Get Guild from DataManager and add points
-            // DataManager.INSTANCE.addGuildPowerPoints(guildId, basePoints);
+            if (guildId != null && level.isClientSide() == false && level.getServer() != null) {
+                // Get the DataManager instance from the server level
+                DataManager dataManager = DataManager.get(level.getServer().getLevel(level.dimension()));
+                if (dataManager != null) {
+                    Guild guild = dataManager.getGuild(guildId);
+                    if (guild != null) {
+                        guild.addPowerPoints(basePoints);
+                    }
+                }
+            }
             powerPointsGenerated = 0;
             setChanged();
         }
@@ -250,7 +268,7 @@ public class TotemBaseBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void load(CompoundTag tag) {
+    public void load(@Nonnull CompoundTag tag) {
         super.load(tag);
         if (tag.contains("GuildId")) {
             guildId = tag.getUUID("GuildId");
@@ -262,7 +280,7 @@ public class TotemBaseBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
+    protected void saveAdditional(@Nonnull CompoundTag tag) {
         super.saveAdditional(tag);
         if (guildId != null) {
             tag.putUUID("GuildId", guildId);

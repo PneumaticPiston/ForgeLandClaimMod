@@ -1,23 +1,20 @@
-@echo off
-title Land Claim Mod - Minecraft Client
-color 0b
-
-echo Starting session: %date% %time% > latest.log
+echo Clean workspace...
+call gradlew clean
 
 echo Building mod...
-call ./gradlew clean 2>&1 | tee -a latest.log
-
-echo Building mod...
-call ./gradlew build --stacktrace 2>&1 | tee -a latest.log
-
-echo Starting Minecraft client...
-call ./gradlew runClient 2>&1 | tee -a latest.log
+call gradlew build --stacktrace
 
 if errorlevel 1 (
-    echo Failed to start Minecraft client | tee -a latest.log
+    echo Build failed
     pause
     exit /b 1
 )
 
-echo Session ended: %date% %time% | tee -a latest.log
-exit /b 0
+echo Starting Minecraft client...
+call gradlew runClient
+
+if errorlevel 1 (
+    echo Failed to start Minecraft client
+    pause
+    exit /b 1
+)
