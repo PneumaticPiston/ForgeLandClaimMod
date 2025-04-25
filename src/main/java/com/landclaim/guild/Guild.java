@@ -1,20 +1,20 @@
-package com.landclaim.team;
+package com.landclaim.guild;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import java.util.*;
 
-public class Team {
+public class Guild {
     private final String name;
     private UUID id;
     private final Set<UUID> members;
     private UUID owner;
     private int powerPoints;
-    private final Map<UUID, TeamRole> memberRoles;
+    private final Map<UUID, GuildRole> memberRoles;
     private int claimedChunks;
     private final Set<UUID> invitedPlayers = new HashSet<>();
 
-    public Team(String name, UUID ownerId) {
+    public Guild(String name, UUID ownerId) {
         this.name = name;
         this.id = UUID.randomUUID();
         this.members = new HashSet<>();
@@ -22,11 +22,11 @@ public class Team {
         this.members.add(ownerId);
         this.powerPoints = 0;
         this.memberRoles = new HashMap<>();
-        this.memberRoles.put(ownerId, TeamRole.OWNER);
+        this.memberRoles.put(ownerId, GuildRole.OWNER);
         this.claimedChunks = 0;
     }
 
-    public Team(String name, ServerPlayer owner) {
+    public Guild(String name, ServerPlayer owner) {
         this(name, owner.getUUID());
     }
 
@@ -50,8 +50,8 @@ public class Team {
         return owner.equals(playerId);
     }
 
-    public TeamRole getMemberRole(UUID playerId) {
-        return memberRoles.getOrDefault(playerId, TeamRole.NONE);
+    public GuildRole getMemberRole(UUID playerId) {
+        return memberRoles.getOrDefault(playerId, GuildRole.NONE);
     }
 
     public void addMember(ServerPlayer player) {
@@ -60,7 +60,7 @@ public class Team {
 
     public void addMember(UUID playerId) {
         members.add(playerId);
-        memberRoles.put(playerId, TeamRole.MEMBER);
+        memberRoles.put(playerId, GuildRole.MEMBER);
     }
 
     public void removeMember(UUID playerId) {
@@ -108,13 +108,13 @@ public class Team {
 
     public void setOwner(UUID playerId) {
         if (members.contains(playerId)) {
-            memberRoles.put(this.owner, TeamRole.MEMBER);
+            memberRoles.put(this.owner, GuildRole.MEMBER);
             this.owner = playerId;
-            memberRoles.put(playerId, TeamRole.OWNER);
+            memberRoles.put(playerId, GuildRole.OWNER);
         }
     }
 
-    // Save team data to NBT
+    // Save guild data to NBT
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         tag.putString("name", name);
@@ -134,24 +134,24 @@ public class Team {
         return tag;
     }
 
-    // Load team data from NBT
-    public static Team load(CompoundTag tag) {
-        Team team = new Team(tag.getString("name"), (UUID)null);
-        team.id = tag.getUUID("id");
-        team.owner = tag.getUUID("owner");
-        team.powerPoints = tag.getInt("powerPoints");
-        team.claimedChunks = tag.getInt("claimedChunks");
+    // Load guild data from NBT
+    public static Guild load(CompoundTag tag) {
+        Guild guild = new Guild(tag.getString("name"), (UUID)null);
+        guild.id = tag.getUUID("id");
+        guild.owner = tag.getUUID("owner");
+        guild.powerPoints = tag.getInt("powerPoints");
+        guild.claimedChunks = tag.getInt("claimedChunks");
 
         CompoundTag membersTag = tag.getCompound("members");
-        membersTag.getAllKeys().forEach(key -> team.members.add(UUID.fromString(key)));
+        membersTag.getAllKeys().forEach(key -> guild.members.add(UUID.fromString(key)));
 
         CompoundTag rolesTag = tag.getCompound("roles");
         rolesTag.getAllKeys().forEach(key -> {
             UUID memberId = UUID.fromString(key);
-            TeamRole role = TeamRole.values()[rolesTag.getInt(key)];
-            team.memberRoles.put(memberId, role);
+            GuildRole role = GuildRole.values()[rolesTag.getInt(key)];
+            guild.memberRoles.put(memberId, role);
         });
 
-        return team;
+        return guild;
     }
 }

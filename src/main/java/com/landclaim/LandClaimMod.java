@@ -2,9 +2,9 @@ package com.landclaim;
 
 import com.landclaim.data.DataManager;
 import com.landclaim.registry.ModRegistry;
-import com.landclaim.team.Team;
+import com.landclaim.guild.Guild;
 import com.landclaim.command.ClaimCommand;
-import com.landclaim.command.TeamCommand;
+import com.landclaim.command.GuildCommand;
 import com.landclaim.config.ModConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -68,24 +68,24 @@ public class LandClaimMod {
     private void onCommandsRegister(RegisterCommandsEvent event) {
         LOGGER.info("LandClaim Mod: Registering commands");
         ClaimCommand.register(event.getDispatcher());
-        TeamCommand.register(event.getDispatcher());
+        GuildCommand.register(event.getDispatcher());
     }
 
     private void onConfigLoad(final ModConfigEvent event) {
-        // Update configuration logic here
+        ModConfig.updateClaimCost();
     }
 
     private void onConfigReload(final ModConfigEvent event) {
-        // Update configuration logic here
+        ModConfig.updateClaimCost();
     }
 
     private void onBlockBreak(BlockEvent.BreakEvent event) {
         if (!(event.getPlayer() instanceof ServerPlayer player)) return;
         
         ChunkPos chunkPos = new ChunkPos(event.getPos());
-        Team team = DataManager.getTeamForChunk(chunkPos);
+        Guild guild = DataManager.getGuildForChunk(chunkPos);
         
-        if (team != null && !team.isMember(player.getUUID())) {
+        if (guild != null && !guild.isMember(player.getUUID())) {
             event.setCanceled(true);
             player.sendSystemMessage(Component.literal("§cYou cannot break blocks in this claimed territory!"));
         }
@@ -95,9 +95,9 @@ public class LandClaimMod {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         
         ChunkPos chunkPos = new ChunkPos(event.getPos());
-        Team team = DataManager.getTeamForChunk(chunkPos);
+        Guild guild = DataManager.getGuildForChunk(chunkPos);
         
-        if (team != null && !team.isMember(player.getUUID())) {
+        if (guild != null && !guild.isMember(player.getUUID())) {
             event.setCanceled(true);
             player.sendSystemMessage(Component.literal("§cYou cannot place blocks in this claimed territory!"));
         }
@@ -108,9 +108,9 @@ public class LandClaimMod {
         
         BlockPos pos = event.getPos();
         ChunkPos chunkPos = new ChunkPos(pos);
-        Team team = DataManager.getTeamForChunk(chunkPos);
+        Guild guild = DataManager.getGuildForChunk(chunkPos);
         
-        if (team != null && !team.isMember(player.getUUID())) {
+        if (guild != null && !guild.isMember(player.getUUID())) {
             event.setCanceled(true);
             player.sendSystemMessage(Component.literal("§cYou cannot interact with blocks in this claimed territory!"));
         }

@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.landclaim.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "landclaim.refmap.json",
+  "mixins": [
+    "MobSpawningMixin",
+    "PlayerDeathMixin"
+  ],
+  "client": [
+  ],
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "plugin": "com.landclaim.mixin.MixinConfig"
+}

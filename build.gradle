@@ -4,6 +4,13 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
+// Create a specific configuration for Mixin
+configurations {
+    annotationProcessor {
+        extendsFrom implementation
+    }
+}
+
 // Add this section near the top of the file
 gradle.projectsEvaluated {
     tasks.withType(JavaCompile) {
@@ -90,7 +97,6 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     
     // Include Minecraft's bundled libraries
-    annotationProcessor 'org.spongepowered:mixin:0.8.5'
     implementation fg.deobf("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
     
     // Remove or comment out the problematic JEI dependencies
@@ -99,40 +105,20 @@ dependencies {
     // compileOnly fg.deobf("curse.maven:jei-238222:4712868")
     // runtimeOnly fg.deobf("curse.maven:jei-238222:4712868")
     
+    // Configure Mixin annotation processor
+    annotationProcessor 'org.spongepowered:mixin:0.8.5'
+    
+    // Add required dependencies and make them available for annotation processor
     implementation 'com.google.code.gson:gson:2.10.1'
     annotationProcessor 'com.google.code.gson:gson:2.10.1'
     
-    // Ensure Mixin annotation processor has access to Gson
-    annotationProcessor('org.spongepowered:mixin:0.8.5') {
-        dependencies {
-            implementation 'com.google.code.gson:gson:2.10.1'
-        }
-    }
-    
-    // Add Guava dependency
     implementation 'com.google.guava:guava:32.1.2-jre'
     annotationProcessor 'com.google.guava:guava:32.1.2-jre'
     
-    // Ensure Mixin annotation processor has access to Guava
-    annotationProcessor('org.spongepowered:mixin:0.8.5') {
-        dependencies {
-            implementation 'com.google.guava:guava:32.1.2-jre'
-        }
-    }
-    
-    // Add ASM dependency
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.ow2.asm:asm-tree:9.5'
     annotationProcessor 'org.ow2.asm:asm:9.5'
     annotationProcessor 'org.ow2.asm:asm-tree:9.5'
-    
-    // Ensure Mixin annotation processor has access to ASM
-    annotationProcessor('org.spongepowered:mixin:0.8.5') {
-        dependencies {
-            implementation 'org.ow2.asm:asm:9.5'
-            implementation 'org.ow2.asm:asm-tree:9.5'
-        }
-    }
     
     testImplementation 'junit:junit:4.13.2'
 }
@@ -180,6 +166,15 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
 
+// Add a task to debug Java configuration
+task showJavaInfo {
+    doLast {
+        println "Java Home: ${System.getProperty('java.home')}"
+        println "Java Version: ${System.getProperty('java.version')}"
+        println "Using toolchain: ${java.toolchain.languageVersion.get()}"
+    }
+}
+
 tasks.named('compileJava') {
     options.incremental = true
     outputs.upToDateWhen { false }
@@ -188,4 +183,12 @@ tasks.named('compileJava') {
 tasks.named('compileJava').configure {
     options.encoding = 'UTF-8'
     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+
+    // Configure annotation processor classpath
+    options.annotationProcessorPath = configurations.annotationProcessor
+    
+    // Configure the Mixin annotation processor
+    options.compilerArgs << "-Amixin.quiet=true"
+    options.compilerArgs << "-Amixin.debug=true"
+    options.compilerArgs << "-Amixin.compatibilityLevel=JAVA_17"
 }
